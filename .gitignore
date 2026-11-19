@@ -1,5 +1,4 @@
 .frames/
 .preview/
 dist/
-.server.pid
-.server2.pid
+*.pid
