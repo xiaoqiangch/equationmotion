@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EquationMotion — animate LaTeX equations, export transparent video</title>
+<meta name="description" content="Paste LaTeX, get a step-by-step animated equation sequence. Export PNG frames with alpha, WebM or GIF for Premiere, DaVinci, After Effects. Runs in your browser, nothing uploaded.">
+<link rel="canonical" href="https://equationmotion.pages.dev/">
+<meta property="og:title" content="EquationMotion — animate LaTeX equations">
+<meta property="og:description" content="Step-by-step equation animation in the browser. Transparent PNG frames, WebM, GIF. No account, no upload.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/style.css">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [], displayMath: [['$$','$$']], processEscapes: false },
+    svg: { fontCache: 'local', scale: 1 },
+    startup: { typeset: false }
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+<script defer src="/assets/app.js"></script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="/"><span class="brand-mark">∫</span>EquationMotion</a>
+  <nav>
+    <a href="#studio">Studio</a>
+    <a href="#how">How it works</a>
+    <a href="/guides/">Guides</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Runs entirely in your browser</div>
+    <h1>Animate LaTeX equations.<br>Export frames your editor can use.</h1>
+    <p class="lead">Paste your derivation line by line. EquationMotion typesets it with MathJax and gives you a clean, step-by-step write-on animation — as transparent PNG frames, WebM, GIF or a poster still. No account, no upload, no render queue.</p>
+  </section>
+
+  <section id="studio" class="app">
+    <div>
+      <div class="panel">
+        <div class="panel-head">Steps <span class="spacer"></span>
+          <button class="btn sm ghost" id="addStep">+ Add step</button>
+        </div>
+        <div class="panel-body">
+          <div class="steps" id="steps"></div>
+          <p class="hint" style="margin:10px 0 0">One equation per step. Plain text works too — it becomes <code>\text{…}</code>.</p>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head">Style</div>
+        <div class="panel-body">
+          <div class="field">
+            <label>Canvas</label>
+            <div class="row">
+              <button class="btn sm" data-res="1920x1080">16:9 — 1920×1080</button>
+              <button class="btn sm" data-res="1080x1920">9:16 — 1080×1920</button>
+              <button class="btn sm" data-res="1080x1080">1:1 — 1080×1080</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Background</label>
+            <div class="row">
+              <button class="btn sm" data-theme="dark">Dark</button>
+              <button class="btn sm" data-theme="light">Light</button>
+              <button class="btn sm" data-theme="transparent">Transparent</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Reveal style</label>
+            <select id="revealSel">
+              <option value="write">Write-on (left to right)</option>
+              <option value="fade">Fade in</option>
+              <option value="slide">Slide up</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Sequence</label>
+            <select id="modeSel">
+              <option value="cumulative">Keep earlier steps on screen</option>
+              <option value="replace">Replace each step</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Type size <span id="fontSizeVal" class="hint"></span></label>
+            <input id="fontSize" type="range" min="28" max="120" step="2" value="64">
+          </div>
+          <div class="field">
+            <label>Write duration <span id="writeVal" class="hint"></span></label>
+            <input id="writeDur" type="range" min="0.3" max="4" step="0.1" value="1.5">
+          </div>
+          <div class="field">
+            <label>Hold after each step <span id="holdVal" class="hint"></span></label>
+            <input id="holdDur" type="range" min="0" max="3" step="0.1" value="0.9">
+          </div>
+          <div class="field">
+            <label>Accent colour (for <code>◆</code> steps)</label>
+            <div class="row"><input id="accentColor" type="color" value="#5ee0c8">
+              <input id="titleInput" type="text" placeholder="Optional title, e.g. Euler's identity"></div>
+          </div>
+          <div class="field">
+            <label style="display:flex;gap:8px;align-items:center;font-weight:500">
+              <input id="watermark" type="checkbox" checked> Small corner watermark
+            </label>
+            <label style="display:flex;gap:8px;align-items:center;font-weight:500">
+              <input id="dimPrev" type="checkbox"> Dim earlier steps
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="stage">
+        <div class="stage-canvas-wrap"><canvas id="stage" width="1920" height="1080"></canvas></div>
+        <div class="transport">
+          <button class="btn sm primary" id="play">Play</button>
+          <span class="time"><span id="now">0:00.0</span> / <span id="total">0:00.0</span></span>
+          <input class="seek grow" id="seek" type="range" min="0" max="1000" value="0">
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-head">Export <span class="spacer"></span><span class="hint">30 fps · alpha where supported</span></div>
+        <div class="panel-body">
+          <div class="exports">
+            <div class="export-card">
+              <b>PNG sequence (ZIP)</b>
+              <span>The only route that keeps true alpha. Drops into Premiere, DaVinci Resolve or After Effects as an image sequence.</span>
+              <button class="btn sm primary" id="exportPng">Export frames</button>
+            </div>
+            <div class="export-card">
+              <b>WebM</b>
+              <span>One file, real-time encode in the browser. The background is baked in — use frames when you need alpha.</span>
+              <button class="btn sm" id="exportWebm">Export WebM</button>
+            </div>
+            <div class="export-card">
+              <b>GIF</b>
+              <span>Looping GIF at 12 fps, sized down. For slides, docs and chat.</span>
+              <button class="btn sm" id="exportGif">Export GIF</button>
+            </div>
+            <div class="export-card">
+              <b>Poster still</b>
+              <span>The final frame as a full-resolution PNG — thumbnails and openers.</span>
+              <button class="btn sm" id="exportPoster">Save still</button>
+            </div>
+          </div>
+          <div class="status" id="status"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn sm ghost" id="copyLink">Copy share link</button>
+            <button class="btn sm ghost" id="resetDemo">Reset to demo</button>
+          </div>
+          <p class="hint" style="margin:10px 0 0">Shortcuts: <kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> step through time. Nothing you type leaves the page.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <h2>How it works</h2>
+    <div class="cards">
+      <div class="card"><h3>1. Paste the derivation</h3><p>One line per step — <code>\int_0^1 x^2\,dx</code>, a sentence, whatever the textbook says. Plain text is accepted.</p></div>
+      <div class="card"><h3>2. Pick the motion</h3><p>Write-on, fade or slide. Choose cumulative (keep the whole derivation) or replace (one line at a time, for vertical video).</p></div>
+      <div class="card"><h3>3. Export what your editor wants</h3><p>Transparent PNG sequence, WebM, GIF or a poster still. Frames are exactly the canvas size, so they compose over footage at 1:1.</p></div>
+    </div>
+  </section>
+
+  <section class="section prose">
+    <h2>Why not just use Manim?</h2>
+    <p>Manim is the right tool when the animation <em>is</em> the explanation — a plane transforming, a vector field rotating, a 3D surface. It is a poor fit when you have forty equations to caption for a course and the animation you need is "this line gets written, then the next one". Setting up Python, LaTeX and Cairo for a two-line reveal is a lot of machinery for a small job.</p>
+    <table class="cmp">
+      <thead><tr><th></th><th>EquationMotion</th><th>Manim</th><th>Motion-graphics apps</th></tr></thead>
+      <tbody>
+        <tr><td>Setup</td><td><span class="badge ok">open a URL</span></td><td><span class="badge no">Python + LaTeX</span></td><td><span class="badge no">install + licence</span></td></tr>
+        <tr><td>LaTeX typesetting</td><td>MathJax, in-browser</td><td>Cairo/Pango + TeX</td><td>manual or plugin</td></tr>
+        <tr><td>Arbitrary geometry</td><td>not the point</td><td><span class="badge ok">full engine</span></td><td>keyframes</td></tr>
+        <tr><td>Transparent frames</td><td><span class="badge ok">one click</span></td><td>CLI flags</td><td>render settings</td></tr>
+        <tr><td>Repeatability</td><td>share link with the steps</td><td>script in git</td><td>project file</td></tr>
+      </tbody>
+    </table>
+    <p>Use both: EquationMotion for the twenty equations you need to animate today, Manim for the one scene that needs a real engine.</p>
+  </section>
+
+  <section class="section prose" id="faq">
+    <h2>FAQ</h2>
+    <h3>Is anything uploaded?</h3>
+    <p>No. Typesetting, animation and encoding all run in your browser. There is no backend to send your equations to — which also means the page works offline once loaded.</p>
+    <h3>Why PNG frames instead of an MP4?</h3>
+    <p>MP4 has no alpha channel, and browsers' WebM encoders do not write one either — a WebM from this page has its background baked in. A transparent PNG sequence is the only export here that carries true alpha, and it drops straight onto footage in any NLE without a re-encode.</p>
+    <h3>Does it handle chemistry or physics notation?</h3>
+    <p>Anything MathJax can typeset: <code>mhchem</code> is not loaded by default, but vectors, operators, matrices, <code>align</code> environments and Greek symbols all work. Very heavy <code>\usepackage</code>-level macros are out of scope.</p>
+    <h3>What size should I render?</h3>
+    <p>1920×1080 for talking-head overlays, 1080×1920 for vertical, 1080×1080 for square posts. Frames render at exactly the canvas size, so you can scale in the editor without resampling twice.</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>© 2026 EquationMotion</span>
+    <span>Built with MathJax. Renders locally.</span>
+    <nav>
+      <a href="/guides/">Guides</a>
+      <a href="#faq">FAQ</a>
+      <a href="#studio">Open studio</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

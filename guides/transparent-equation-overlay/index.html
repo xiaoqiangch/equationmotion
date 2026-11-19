@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Transparent equation overlays for video: why MP4 can't do it — EquationMotion</title>
+<meta name="description" content="MP4 has no alpha channel. Here is what to export instead, how to name frames so Premiere and DaVinci Resolve import them as a sequence, and how to keep edges from fringing.">
+<link rel="canonical" href="https://equationmotion.pages.dev/guides/transparent-equation-overlay/">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="/"><span class="brand-mark">∫</span>EquationMotion</a>
+  <nav><a href="/#studio">Studio</a><a href="/guides/">Guides</a><a href="/#faq">FAQ</a></nav>
+</header>
+<main class="wrap">
+  <article class="prose" style="padding:54px 0 20px">
+    <div class="eyebrow">Guide · 6 min read</div>
+    <h1>Transparent equation overlays for video</h1>
+    <p class="lead" style="color:var(--fg-2);font-size:17px">You want an equation on top of your face, your lab footage or a whiteboard shot. The first thing to know is that the obvious export format cannot do it.</p>
+
+    <h2>MP4 has no alpha channel</h2>
+    <p>H.264 in an MP4 container is a YUV format with no alpha plane. Every tool that claims to "export transparent MP4" is really exporting a second video and using it as a luma matte, or quietly giving you a WebM/MOV in disguise. If you hand a grader an MP4 with a black background, they will key it out and the antialiased edges of the glyphs will fringe.</p>
+
+    <h2>What to hand your editor instead</h2>
+    <table class="cmp">
+      <thead><tr><th>Format</th><th>Alpha</th><th>Best for</th><th>Watch out for</th></tr></thead>
+      <tbody>
+        <tr><td>PNG sequence</td><td><span class="badge ok">true 8-bit</span></td><td>Premiere, Resolve, After Effects</td><td>large on disk; import as a still sequence</td></tr>
+        <tr><td>WebM (VP9)</td><td><span class="badge ok">yes</span></td><td>OBS, browsers, quick review</td><td>not every NLE reads VP9 alpha</td></tr>
+        <tr><td>ProRes 4444 MOV</td><td><span class="badge ok">yes</span></td><td>final delivery in an Apple pipeline</td><td>needs an encoder; big files</td></tr>
+        <tr><td>GIF</td><td><span class="badge no">1-bit only</span></td><td>slides, docs, chat</td><td>jagged edges, 256 colours</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Frame naming that imports cleanly</h2>
+    <p>Both Premiere and Resolve recognise a zero-padded sequence: <code>frame_0000.png</code>, <code>frame_0001.png</code>, … Keep the digits the same width and start at zero. In Premiere use <em>File → Import</em> and tick "Image Sequence". In Resolve, drop the first frame into the media pool and it asks whether to treat the rest as a sequence.</p>
+
+    <h2>Three settings that avoid ugly edges</h2>
+    <ul>
+      <li><strong>Render at the size you will composite at.</strong> Scaling a 4K overlay down to 1080p in the NLE is fine; upscaling a 720p overlay never is.</li>
+      <li><strong>Export PNG, not JPEG.</strong> JPEG has no alpha at all, and its ringing around thin strokes is exactly what makes formula text look cheap.</li>
+      <li><strong>Keep the type weight up.</strong> Thin serif hairlines disappear over busy footage; one step heavier, or an outline, survives.</li>
+    </ul>
+
+    <p style="margin-top:26px"><a class="btn primary" href="/#studio">Make a transparent equation sequence</a></p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap"><span>© 2026 EquationMotion</span>
+    <nav><a href="/">Home</a><a href="/guides/">Guides</a></nav></div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manim without Python: browser options in 2026 — EquationMotion</title>
+<meta name="description" content="A survey of ways to get Manim-style maths animation in a browser: Pyodide ports of the real engine, visual timeline editors, and simple write-on renderers, with the trade-offs of each.">
+<link rel="canonical" href="https://equationmotion.pages.dev/guides/manim-alternative-browser/">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="/"><span class="brand-mark">∫</span>EquationMotion</a>
+  <nav><a href="/#studio">Studio</a><a href="/guides/">Guides</a><a href="/#faq">FAQ</a></nav>
+</header>
+<main class="wrap">
+  <article class="prose" style="padding:54px 0 20px">
+    <div class="eyebrow">Guide · 9 min read</div>
+    <h1>Manim without Python</h1>
+    <p class="lead" style="color:var(--fg-2);font-size:17px">The engine is portable now. Whether that helps you depends on which of its three jobs you actually need.</p>
+
+    <h2>Job 1 — run the real engine in a tab</h2>
+    <p>Pyodide builds of Manim Community compile the actual Python package to WebAssembly and shim Cairo to a 2D canvas. You write real <code>Scene</code> classes and get real output, with a LaTeX-ish typesetter standing in for TeX. The catch is weight: the first load pulls tens of megabytes of runtime, and anything that depends on a native TeX distribution degrades to a subset.</p>
+    <p>A lighter variant compiles Manim's own code to a much smaller runtime and keeps the familiar API. It is impressive, and it is still a programming interface — it removes the install, not the coding.</p>
+
+    <h2>Job 2 — a visual timeline over the engine</h2>
+    <p>Several editors put a timeline on top: drag a text or LaTeX object, add a transform, export. This is the friendliest path for teachers, and the most work to make look good, because the easing and the pacing are now yours to set.</p>
+
+    <h2>Job 3 — just write the line on screen</h2>
+    <p>Most educational equations are not geometry. They are a line of type that should appear, then the next line. For that, a full engine is a lot of machinery, and the write-on reveal is the whole feature.</p>
+    <table class="cmp">
+      <thead><tr><th>Need</th><th>Real engine in browser</th><th>Visual timeline</th><th>Write-on renderer</th></tr></thead>
+      <tbody>
+        <tr><td>Term-by-term morphing</td><td><span class="badge ok">yes</span></td><td>partial</td><td><span class="badge no">no</span></td></tr>
+        <tr><td>3D / camera moves</td><td><span class="badge ok">yes</span></td><td>rare</td><td><span class="badge no">no</span></td></tr>
+        <tr><td>Time to first frame</td><td>minutes (cold start)</td><td>minutes</td><td>seconds</td></tr>
+        <tr><td>Needs programming</td><td>yes</td><td>no</td><td>no</td></tr>
+        <tr><td>Transparent frames</td><td>flags</td><td>settings</td><td>one click</td></tr>
+      </tbody>
+    </table>
+
+    <h2>What I would actually do</h2>
+    <p>Keep Manim installed for the one scene per video that needs a real transformation. Use a write-on renderer for the twenty equations around it. The mix sounds inelegant and is what most working channels end up doing anyway — the tool follows the shot, not the other way round.</p>
+
+    <p style="margin-top:26px"><a class="btn primary" href="/#studio">Try the write-on renderer</a></p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap"><span>© 2026 EquationMotion</span>
+    <nav><a href="/">Home</a><a href="/guides/">Guides</a></nav></div>
+</footer>
+</body>
+</html>
